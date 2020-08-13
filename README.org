@@ -1,0 +1,3 @@
+A study in being total noob in [[http://ats-lang.sourceforge.net/][ATS]]
+
+Following [[http://www2.cs.uregina.ca/~hilder/cs833/Other%2520Reference%2520Materials/The%2520C%2520Programming%2520Language.pdf][C Programming Language]]?
