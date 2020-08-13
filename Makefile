@@ -1,5 +1,8 @@
 .PHONY : clean
 
+%_dats : %.dats
+	myatscc $<
+
 clean :
-	rm *_*
+	rm *_dats # myatscc binaries
 	rm *~
