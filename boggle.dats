@@ -2,11 +2,9 @@
 staload UN = "prelude/SATS/unsafe.sats"
 staload "libats/DATS/funmap_rbtree.dats"
 staload "libats/SATS/SHARE/funmap.hats"
+(* word count post/article/tutorial maybe useful *)
 
-datatype branch (a:t@ype) = B of (char,a)
-datatype trie = branch of (bool,List(branch(trie)))
-
-fn chr (x : char) : char -> bool = lam y => x = y
+datatype node = trie of @{eow = bool, sub = map(char,trie)}
 
 fn{x:t@ype} span {a,b,c:nat|a+b==c}
 (p : x -> bool, xs : list(x,c)) : (list(x,a),list(x,b)) =
@@ -20,19 +18,17 @@ let fun{x:t@ype} lp {a,b:nat}
     // let val xys = $UN.cast(cons(x,$UN.cast(ys))) in lp (p,xs,xys) end
     | false => (cons(x,xs),ys)
 in lp(p,xs,nil) end
-
-(* fn gph (ws : List(List(char))) : List(char,(List(char))) = ws *)
-
-(*
-fn put (word : List0_vt(char), dict  : &trie >> _) : void = 
-case dict of 
-| branch (eow, dict) => case- word of
-| list_vt_nil () => 
-let prval () = $UN.cast2void(word) 
-    val _ = eow := true
-    prval _ = fold@ (eow)
-in () end
-*)
+fn add_word (s : charlst_vt, dict : trie) : trie = let
+  fun lp(xs : charlst_vt, dict as trie t : trie) : trie
+  = case xs of
+  | ~nil_vt () => trie @{eow = true, sub = t.sub}
+  | ~cons_vt(x,xs) => let // TODO
+    val () = free(xs)
+  in case funmap_search_opt(x,t.sub) of
+  | None () => dict
+  | _ => dict
+  end
+in lp(s,dict) end
 
 fn lc (f : FILEref) : [m:nat] int(m) =
 let fun lp{n:nat} (f : FILEref, n : int(n)) : [m:nat|n <= m] int (m) = 
