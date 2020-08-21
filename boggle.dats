@@ -1,34 +1,24 @@
 #include "share/atspre_staload.hats"
 staload UN = "prelude/SATS/unsafe.sats"
-staload "libats/DATS/funmap_rbtree.dats"
-staload "libats/SATS/SHARE/funmap.hats"
+staload "libats/DATS/linmap_avltree.dats"
+staload "libats/SATS/SHARE/linmap.hats"
 (* word count post/article/tutorial maybe useful *)
 
-datatype node = trie of @{eow = bool, sub = map(char,trie)}
+datavtype trie = node of (bool, map(char,trie))
 
-fn{x:t@ype} span {a,b,c:nat|a+b==c}
-(p : x -> bool, xs : list(x,c)) : (list(x,a),list(x,b)) =
-let fun{x:t@ype} lp {a,b:nat}
-   (p : x -> bool, xs : list(x,a), ys : list(x,b)) 
-   : (list(x,b),list(x,a)) =
-    case+ xs of
-    | nil () => (list_vt2t(reverse(ys)), xs)
-    | cons (x,xs) => case p x of
-    | true => (ys,cons(x,xs))
-    // let val xys = $UN.cast(cons(x,$UN.cast(ys))) in lp (p,xs,xys) end
-    | false => (cons(x,xs),ys)
-in lp(p,xs,nil) end
-fn add_word (s : charlst_vt, dict : trie) : trie = let
-  fun lp(xs : charlst_vt, dict as trie t : trie) : trie
-  = case xs of
-  | ~nil_vt () => trie @{eow = true, sub = t.sub}
-  | ~cons_vt(x,xs) => let // TODO
-    val () = free(xs)
-  in case funmap_search_opt(x,t.sub) of
-  | None () => dict
-  | _ => dict
-  end
-in lp(s,dict) end
+// val empty : trie = node (false, linmap_nil())
+
+fn add (word : charlst_vt, D : !trie) : void = let
+  fun lp (word : charlst_vt, D : !trie) : void = case word of
+  | ~nil_vt () => let 
+  val _ = case D of
+  | node (t,_) => !t := true
+  in end
+  | ~cons_vt(x,ws) => let
+  val _ = free(ws)
+  in end
+  val () = lp (word, D)
+in end
 
 fn lc (f : FILEref) : [m:nat] int(m) =
 let fun lp{n:nat} (f : FILEref, n : int(n)) : [m:nat|n <= m] int (m) = 
