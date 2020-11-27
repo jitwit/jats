@@ -30,7 +30,7 @@ let
   val lj = stropt_some("/home/jrn/code/jats/libj.so")
    // strptr2stropt(string0_copy("libj.so"))
   val (pfo | pl) = dlopen(lj,RTLD_LAZY)
-  val () = if pl=0 then println!("blahhhh!") else ()
+  val () = if pl = 0 then println!("blahhhh!") else ()
   val () = assertloc(pl > 0)
   prval Some_v(pf) = pfo
   val (fpf | str) = dlerror ()
@@ -38,4 +38,4 @@ let
   val jinit = dlsym (pf | pl, "JInit")
   val jgetr = dlsym (pf | pl, "JGetR")
   val err = dlclose (pf | pl)
-in println!("it loaded!") end
+in println!("J loaded!") end
