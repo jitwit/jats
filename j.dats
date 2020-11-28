@@ -1,13 +1,12 @@
 #include "share/atspre_staload.hats"
 staload UN = "prelude/SATS/unsafe.sats"
 staload "libats/libc/SATS/dlfcn.sats"
-//staload "prelude/basics_pre.sats"
 
 abstype J
-stadef jinittype = {l:addr} () -> (J@l | ptr l)
+stadef jinittype = () -> [l:agz] (J@l | ptr l)
 // stadef jdotype   = {l:addr} (!J@l | ptr l,!strptr) -> int
-stadef jdotype   = {l:addr} (!J@l | ptr l,string) -> int
-stadef jfreetype = {l:addr} (J@l | ptr l) -> void
+stadef jdotype   = {l:agz} (!J@l | ptr l,string) -> int
+stadef jfreetype = {l:agz} (J@l | ptr l) -> void
 stadef jgetmtype = 
 {l,t,r,s,d:addr}
 (!J@l, !lint? @ t >> lint @ t, !lint? @ r >> lint @ r,
@@ -69,21 +68,33 @@ dataview jval =
 {t,r,s,d:addr} jval of 
 (int@t, int@r, int@s, int@d | ptr t, ptr r, ptr s, ptr d)
 
-fn jget{l:addr} (pf : !J@l | j : ptr l,jvar : string) : void = let
+// fn jgetshape{s:addr}
+// (pf : !lint@s | sh : ptr s, rk : uint)
+// : [n:nat] [l:agz] (array_v (lint?, l, n), mfree_gc_v (l) | ptr l) = let
+//   val n = g1ofg0(rk)
+//   val (apf,afr|ar) = array_ptr_alloc<lint>(i2sz(n))
+// //  val _ = $extfcall(int,"memcpy",ar,sh,rk)
+// in (apf,afr|ar) end
+
+fn jget{l:agz} (pf : !J@l | j : ptr l,jvar : string) : void = let
   val (pft,frt|t) = ptr_alloc<lint>()
   val (pfr,frr|r) = ptr_alloc<lint>()
   val (pfs,frs|s) = ptr_alloc<lint>()
   val (pfd,frd|d) = ptr_alloc<lint>()
   val res = jgetm(pf,pft,pfr,pfs,pfd|j,jvar,t,r,s,d)
-  val () = println!("\nok?    ",0=res,
-                    "\ntype:  ",ptr_get(pft|t),
-                    "\nrank:  ",ptr_get(pfr|r),
-                    "\nshape: ",$UN.ptr0_get<lint>($UN.cast(ptr_get(pfs|s)))
+  val rk = ptr_get(pfr|r)
+//  val (pfsh,shfr|sh) = jgetshape(pfs|s,rk)
+  val () = println!("\nok?     ",0=res,
+                    "\ntype:   ",ptr_get(pft|t),
+                    "\nrank:   ",rk,
+                    "\nlength: ",$UN.ptr0_get<lint>($UN.cast(ptr_get(pfs|s))),
+                    "\nshape:  ",0
                     )
   val () = ptr_free(frt,pft|t)
   val () = ptr_free(frr,pfr|r)
   val () = ptr_free(frs,pfs|s)
   val () = ptr_free(frd,pfd|d)
+//  val () = ptr_free(shfr,pfsh|sh)
 in end
 
 (* crucial example: https://github.com/githwxi/ATS-Postiats/blob/master/doc/EXAMPLE/ATSLIB/libats_libc_dlfcn.dats *)
