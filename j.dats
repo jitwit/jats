@@ -38,25 +38,6 @@ val () = assertloc(p>0)
 val jgetm = $UN.cast{jgetmtype}(p)
 (* val err = dlclose (pf | jhandle) *)
 
-dataview jval = 
-{t,r,s,d:addr} jval of 
-(int@t, int@r, int@s, int@d | ptr t, ptr r, ptr s, ptr d)
-
-fn jget{l:addr} (pf : !J@l | j : ptr l,jvar : string) : void = let
-  val (pft,frt|t) = ptr_alloc<lint>()
-  val (pfr,frr|r) = ptr_alloc<lint>()
-  val (pfs,frs|s) = ptr_alloc<lint>()
-  val (pfd,frd|d) = ptr_alloc<lint>()
-  val res = jgetm(pf,pft,pfr,pfs,pfd|j,jvar,t,r,s,d)
-  val () = println!("\nok? ",0=res,
-                    "\ntype: ",ptr_get(pft|t),
-                    "\nrank: ",ptr_get(pfr|r))
-  val () = ptr_free(frt,pft|t)
-  val () = ptr_free(frr,pfr|r)
-  val () = ptr_free(frs,pfs|s)
-  val () = ptr_free(frd,pfd|d)
-in end
-
 datatype jtype = 
 | jbool of ()
 | jlit of ()
@@ -84,17 +65,38 @@ case+ t of
 | jcomplex () => 2u * sz2u(sizeof<double>)
 | jtodo(n) => $UN.cast(n)
 
+dataview jval = 
+{t,r,s,d:addr} jval of 
+(int@t, int@r, int@s, int@d | ptr t, ptr r, ptr s, ptr d)
+
+fn jget{l:addr} (pf : !J@l | j : ptr l,jvar : string) : void = let
+  val (pft,frt|t) = ptr_alloc<lint>()
+  val (pfr,frr|r) = ptr_alloc<lint>()
+  val (pfs,frs|s) = ptr_alloc<lint>()
+  val (pfd,frd|d) = ptr_alloc<lint>()
+  val res = jgetm(pf,pft,pfr,pfs,pfd|j,jvar,t,r,s,d)
+  val () = println!("\nok?    ",0=res,
+                    "\ntype:  ",ptr_get(pft|t),
+                    "\nrank:  ",ptr_get(pfr|r),
+                    "\nshape: ",$UN.ptr0_get<lint>($UN.cast(ptr_get(pfs|s)))
+                    )
+  val () = ptr_free(frt,pft|t)
+  val () = ptr_free(frr,pfr|r)
+  val () = ptr_free(frs,pfs|s)
+  val () = ptr_free(frd,pfd|d)
+in end
+
 (* crucial example: https://github.com/githwxi/ATS-Postiats/blob/master/doc/EXAMPLE/ATSLIB/libats_libc_dlfcn.dats *)
 implement main0 () =
 let
 
   val (pfj | j) = jinit ()
-  val res = jdo(pfj | j, "4 (1!:2)~ ,/ (10{a.),.~ \": j./~ i:5")
+//  val res = jdo(pfj | j, "4 (1!:2)~ ,/ (10{a.),.~ \": j./~ i:5")
 
-  val res = jdo(pfj | j, "x =: i. 10")
+  val res = jdo(pfj | j, "x =: i. 2 2 10")
   val () = jget (pfj | j, "x")
 
-  val res = jdo(pfj | j, "x =: a. {~ 65 + i. 10")
+  val res = jdo(pfj | j, "x =: a. {~ 65 + i. 26")
   val () = jget (pfj | j, "x")
 
   val res = jdo(pfj | j, "x =: = i. 10")
