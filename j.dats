@@ -68,13 +68,15 @@ dataview jval =
 {t,r,s,d:addr} jval of 
 (int@t, int@r, int@s, int@d | ptr t, ptr r, ptr s, ptr d)
 
-// fn jgetshape{s:addr}
-// (pf : !lint@s | sh : ptr s, rk : uint)
-// : [n:nat] [l:agz] (array_v (lint?, l, n), mfree_gc_v (l) | ptr l) = let
-//   val n = g1ofg0(rk)
-//   val (apf,afr|ar) = array_ptr_alloc<lint>(i2sz(n))
-// //  val _ = $extfcall(int,"memcpy",ar,sh,rk)
-// in (apf,afr|ar) end
+fn jgetshape{s:addr}
+(pf : !lint@s | sh : ptr s, rk : uint)
+: [n:nat] [l:agz] (array_v (lint?, l, n), mfree_gc_v (l) | ptr l) = let
+  val n = g1ofg0($UN.cast{size_t}(rk))
+  val (apf,afr|ar) = array_ptr_alloc<lint>(n)
+//  val x = ref(sh)
+//  val () = array_copy(!ar,x,n)
+  val _ = $extfcall(int,"memcpy",ar,!sh,rk)
+in (apf,afr|ar) end
 
 fn jget{l:agz} (pf : !J@l | j : ptr l,jvar : string) : void = let
   val (pft,frt|t) = ptr_alloc<lint>()
@@ -83,18 +85,17 @@ fn jget{l:agz} (pf : !J@l | j : ptr l,jvar : string) : void = let
   val (pfd,frd|d) = ptr_alloc<lint>()
   val res = jgetm(pf,pft,pfr,pfs,pfd|j,jvar,t,r,s,d)
   val rk = ptr_get(pfr|r)
-//  val (pfsh,shfr|sh) = jgetshape(pfs|s,rk)
+  val (pfsh,shfr|sh) = jgetshape(pfs|s,$UN.cast(rk))
   val () = println!("\nok?     ",0=res,
                     "\ntype:   ",ptr_get(pft|t),
                     "\nrank:   ",rk,
-                    "\nlength: ",$UN.ptr0_get<lint>($UN.cast(ptr_get(pfs|s))),
-                    "\nshape:  ",0
+                    "\nlength: ",$UN.ptr0_get<lint>($UN.cast(ptr_get(pfs|s)))
                     )
   val () = ptr_free(frt,pft|t)
   val () = ptr_free(frr,pfr|r)
   val () = ptr_free(frs,pfs|s)
   val () = ptr_free(frd,pfd|d)
-//  val () = ptr_free(shfr,pfsh|sh)
+  val () = ptr_free(shfr,pfsh|sh)
 in end
 
 (* crucial example: https://github.com/githwxi/ATS-Postiats/blob/master/doc/EXAMPLE/ATSLIB/libats_libc_dlfcn.dats *)
