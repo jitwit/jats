@@ -11,7 +11,7 @@ stadef jgetmtype =
 {l,t,r,s,d:addr}
 (!J@l, !lint? @ t >> lint @ t, !lint? @ r >> lint @ r,
        !lint? @ s >> lint @ s, !lint? @ d >> lint @ d |
- ptr l, ptr t, ptr r, ptr s, ptr d )
+ ptr l, string, ptr t, ptr r, ptr s, ptr d )
 -> int
 
 val (pf | jhandle) = dlopen(stropt_some("/home/jrn/code/jats/libj.so"),RTLD_LAZY)
@@ -46,7 +46,7 @@ fn getm{l:addr} (pf : !J@l | j : ptr l,jvar : string) : void = let
   val (pfr,frr | r) = ptr_alloc<lint>()
   val (pfs,frs | s) = ptr_alloc<lint>()
   val (pfd,frd | d) = ptr_alloc<lint>()
-  val res = jgetm(pf,pft,pfr,pfs,pfd|j,t,r,s,d)
+  val res = jgetm(pf,pft,pfr,pfs,pfd|j,jvar,t,r,s,d)
   val () = println!(res," ",ptr_get(pft|t))
   val () = ptr_free(frt,pft|t)
   val () = ptr_free(frr,pfr|r)
