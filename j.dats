@@ -4,13 +4,13 @@ staload "libats/libc/SATS/dlfcn.sats"
 //staload "prelude/basics_pre.sats"
 
 abstype J
-stadef jinittype = {l:addr}()->(J@l | ptr l)
-stadef jdotype   = {l:addr}(!J@l | ptr l,!strptr)->int
-stadef jfreetype = {l:addr}(J@l | ptr l)->void
+stadef jinittype = {l:addr} () -> (J@l | ptr l)
+stadef jdotype   = {l:addr} (!J@l | ptr l,!strptr) -> int
+stadef jfreetype = {l:addr} (J@l | ptr l) -> void
 stadef jgetmtype = 
 {l,t,r,s,d:addr}
-(!J@l, !int? @ t >> int @ t, !int? @ r >> int @ r, 
-       !intptr? @ s >> intptr @ s, !intptr? @ d >> intptr @ d | 
+(!J@l, !lint? @ t >> lint @ t, !lint? @ r >> lint @ r,
+       !lint? @ s >> lint @ s, !lint? @ d >> lint @ d | 
  ptr l, ptr t, ptr r, ptr s, ptr d )
 -> int
 
@@ -31,7 +31,23 @@ val jdo = $UN.cast{jdotype}(p)
 val p = dlsym(pf|jhandle, "JFree")
 val () = assertloc(p>0)
 val jfree = $UN.cast{jfreetype}(p)
+
+val p = dlsym(pf|jhandle, "JGetM")
+val () = assertloc(p>0)
+val jgetm = $UN.cast{jgetmtype}(p)
 (* val err = dlclose (pf | jhandle) *)
+
+dataview jval = 
+{t,r,s,d:addr} jval of 
+(int@t, int@r, int@s, int@d | ptr t, ptr r, ptr s, ptr d)
+
+fn getm{l:addr} (pf : !J@l | j : ptr l,jvar : string) : jval = let
+  val (pft | t) = ref_get_viewptr(ref_make_elt(0))
+  val (pfr | r) = ref_get_viewptr(ref_make_elt(0))
+  val (pfs | s) = ref_get_viewptr(ref_make_elt(0))
+  val (pfd | d) = ref_get_viewptr(ref_make_elt(0))
+  val res = jgetm(pf,pft,pfr,pfs,pfd|j,t,r,s,d)
+in jval (pft,pfr,pfs,pfd|t,r,s,d) end
 
 datatype jtype = 
 | jbool of ()
@@ -43,7 +59,7 @@ datatype jtype =
 
 fn jwidth (t : jtype) : uint = 
 case+ t of
-| jbool () => sz2u(sizeof<bool>)
+| jbool () => sz2u(sizeof<char>)
 | jlit () => sz2u(sizeof<char>)
 | jint () => sz2u(sizeof<lint>)
 | jfloat () => sz2u(sizeof<double>)
