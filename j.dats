@@ -1,6 +1,7 @@
 #include "share/atspre_staload.hats"
 staload UN = "prelude/SATS/unsafe.sats"
 staload "libats/libc/SATS/dlfcn.sats"
+staload "j.sats"
 
 abstype J
 stadef jinittype = () -> [l:agz] (J@l | ptr l)
@@ -9,8 +10,8 @@ stadef jdotype   = {l:agz} (!J@l | ptr l,string) -> int
 stadef jfreetype = {l:agz} (J@l | ptr l) -> void
 stadef jgetmtype = 
 {l,t,r,s,d:addr}
-(!J@l, !lint? @ t >> lint @ t, !lint? @ r >> lint @ r,
-       !lint? @ s >> lint @ s, !lint? @ d >> lint @ d |
+(!J@l, !llint? @ t >> llint @ t, !llint? @ r >> llint @ r,
+       !llint? @ s >> llint @ s, !llint? @ d >> llint @ d |
  ptr l, string, ptr t, ptr r, ptr s, ptr d )
 -> int
 
@@ -59,7 +60,7 @@ fn jwidth (t : jtype) : uint =
 case+ t of
 | jbool () => sz2u(sizeof<char>)
 | jlit () => sz2u(sizeof<char>)
-| jint () => sz2u(sizeof<lint>)
+| jint () => sz2u(sizeof<llint>)
 | jfloat () => sz2u(sizeof<double>)
 | jcomplex () => 2u * sz2u(sizeof<double>)
 | jtodo(n) => $UN.cast(n)
@@ -68,34 +69,31 @@ dataview jval =
 {t,r,s,d:addr} jval of 
 (int@t, int@r, int@s, int@d | ptr t, ptr r, ptr s, ptr d)
 
-fn jgetshape{s:addr}
-(pf : !lint@s | sh : ptr s, rk : uint)
-: [n:nat] [l:agz] (array_v (lint?, l, n), mfree_gc_v (l) | ptr l) = let
-  val n = g1ofg0($UN.cast{size_t}(rk))
-  val (apf,afr|ar) = array_ptr_alloc<lint>(n)
-//  val x = ref(sh)
-//  val () = array_copy(!ar,x,n)
-  val _ = $extfcall(int,"memcpy",ar,!sh,rk)
-in (apf,afr|ar) end
+
+(* fn shape(l:addr) : void = let *)
+(*   // arrayptr_tabulate *)
+(* in end  *)
 
 fn jget{l:agz} (pf : !J@l | j : ptr l,jvar : string) : void = let
-  val (pft,frt|t) = ptr_alloc<lint>()
-  val (pfr,frr|r) = ptr_alloc<lint>()
-  val (pfs,frs|s) = ptr_alloc<lint>()
-  val (pfd,frd|d) = ptr_alloc<lint>()
+  val (pft,frt|t) = ptr_alloc<llint>()
+  val (pfr,frr|r) = ptr_alloc<llint>()
+  val (pfs,frs|s) = ptr_alloc<llint>()
+  val (pfd,frd|d) = ptr_alloc<llint>()
   val res = jgetm(pf,pft,pfr,pfs,pfd|j,jvar,t,r,s,d)
   val rk = ptr_get(pfr|r)
-  val (pfsh,shfr|sh) = jgetshape(pfs|s,$UN.cast(rk))
+  val jj = jshp (ptr_get(pfs|s),rk)
+  
+  val () = free(jj)
   val () = println!("\nok?     ",0=res,
                     "\ntype:   ",ptr_get(pft|t),
                     "\nrank:   ",rk,
-                    "\nlength: ",$UN.ptr0_get<lint>($UN.cast(ptr_get(pfs|s)))
+                    "\nlength: ",$UN.ptr0_get<llint>($UN.cast(ptr_get(pfs|s)))
                     )
   val () = ptr_free(frt,pft|t)
   val () = ptr_free(frr,pfr|r)
   val () = ptr_free(frs,pfs|s)
   val () = ptr_free(frd,pfd|d)
-  val () = ptr_free(shfr,pfsh|sh)
+//  val () = ptr_free(shfr,pfsh|sh)
 in end
 
 (* crucial example: https://github.com/githwxi/ATS-Postiats/blob/master/doc/EXAMPLE/ATSLIB/libats_libc_dlfcn.dats *)
